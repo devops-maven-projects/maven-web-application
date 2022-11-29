@@ -29,5 +29,12 @@ pipeline{
                 sh "mvn deploy"
             }
         }
+        stage('DeployappintoTomcatServer'){
+            steps{
+                sshagent(['b3f9454e-9fbe-43a5-8f2f-5d43d20f4823']) {
+                       sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.14.107:/opt/apache-tomcat-9.0.69/webapps/"
+                }
+            }
+        }
     }
 }
