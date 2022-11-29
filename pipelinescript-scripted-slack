@@ -1,44 +1,49 @@
-node{
+node{  // running on master node
 
-    def mavenHome = tool name: "maven 3.8.6"
+    def mavenHome = tool name: "maven 3.8.6"  // defining tools
 
     echo "Build Number: ${env.BUILD_NUMBER}"
     echo "Node Name: ${env.NODE_NAME}"
     echo "Job Name: ${env.JOB_NAME}"
 
+    // defining properties
     properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: '']])
 
-try{
-    sendslacknotifications("STARTED")
-    stage('CheckoutCode'){
+try{  // try block starts
+    sendslacknotifications("STARTED")  // sending slack notification as started
+    stage('CheckoutCode'){  // checkout stage starts
         git credentialsId: 'd2a218c3-f497-4b22-aa9c-9b434ec2d969', url: 'https://github.com/devops-maven-projects/maven-web-application.git'
-    }
+    }  // checkout stage ends
 
-    stage('Build'){
+    stage('Build'){  // build stage starts
         sh "${mavenHome}/bin/mvn clean package"
-    }
+    }  // build stage ends
 
-    stage('ExecutingSonarQubeReport'){
+    stage('ExecutingSonarQubeReport'){  // sonar stage starts
         sh "${mavenHome}/bin/mvn sonar:sonar"
-    }
+    }  // sonar stage ends
 
-    stage('UploadArtifactsToNexus'){
+    stage('UploadArtifactsToNexus'){  // nexus stage starts
         sh "${mavenHome}/bin/mvn deploy"
-    }
+    }  // nexus stage ends
 
-    stage('DeployappintoTomcatServer'){
+    stage('DeployappintoTomcatServer'){   // deploy application stage starts
         sshagent(['b3f9454e-9fbe-43a5-8f2f-5d43d20f4823']) {
     sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.14.107:/opt/apache-tomcat-9.0.69/webapps/"
     }
-    }
-}
-catch(e){
+    }  // deploy application stage ends
+}  // try block ends
+
+catch(e){  // catch block starts
     currentBuild.result = "FAILURE"
-}
-finally{
+}  // catch block ends
+
+finally{  // finally block starts
     sendslacknotifications(currentBuild.result)
-}
-}
+}  // finally block ends
+} // node block ends
+
+// defining the functions
 def sendslacknotifications(String buildStatus = 'STARTED') {
     // Build status of null means success.
     buildStatus = buildStatus ?: 'SUCCESS'
@@ -58,4 +63,4 @@ def sendslacknotifications(String buildStatus = 'STARTED') {
     def msg = "${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}"
 
     slackSend(color: color, message: msg, channel: "#jenkinsbuildnotifications")
-}
+}  // closing of functions block
