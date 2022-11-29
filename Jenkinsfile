@@ -19,6 +19,11 @@ pipeline{
             }
             
         }
+        stage('ExecutingSonarQubeReport'){
+            steps{
+                sh "mvn sonar:sonar"
+            }
+        }
     }
 
 
