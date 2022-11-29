@@ -16,8 +16,7 @@ pipeline{
         stage('Build'){
             steps{
                 sh "mvn clean package"
-            }
-            
+            }  
         }
         stage('ExecutingSonarQubeReport'){
             steps{
@@ -37,4 +36,35 @@ pipeline{
             }
         }
     }
+    post {
+      unstable {
+        sendslacknotifications(currentBuild.result)
+      }
+      success {
+        sendslacknotifications(currentBuild.result)
+      }
+      failure {
+        sendslacknotifications(currentBuild.result)
+      }
+    }
+}
+def sendslacknotifications(String buildStatus = 'STARTED') {
+    // Build status of null means success.
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def color
+
+    if (buildStatus == 'STARTED') {
+        color = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        color = '#00FF00'
+    } else if (buildStatus == 'UNSTABLE') {
+        color = '#FF0000'
+    } else {
+        color = '#FF0000'
+    }
+
+    def msg = "${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}"
+
+    slackSend(color: color, message: msg, channel: "#jenkinsbuildnotifications")
 }
