@@ -1,6 +1,6 @@
 pipeline{  // pipeline start
     
-    agent any
+    agent any  // running on master node
 
     tools{  // tools start
         maven "maven 3.8.6"
