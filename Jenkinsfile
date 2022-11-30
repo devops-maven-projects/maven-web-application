@@ -1,3 +1,4 @@
+@ Library('slackfunction') _
 pipeline{  // pipeline start
     
     agent any  // running on master node
